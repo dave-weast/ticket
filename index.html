@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Overlay Ticket</title>
   <style>
+    :root {
+      color-scheme: only dark;
+    }
     body {
       margin: 0;
+      min-height: 100vh;
       background: #000;
       display: flex;
       justify-content: center;
       align-items: flex-start;
+      padding: 24px 0;
     }
     .ticket-wrap {
       position: relative;
@@ -18,33 +23,27 @@
     }
     .ticket-wrap img {
       display: block;
-      /* 🔥 no width/height here — keep natural size */
+      height: auto;
     }
     .overlay {
       position: absolute;
       color: #000;
       font-family: "Courier New", monospace;
       font-size: 26px;
+      font-weight: normal;
       white-space: nowrap;
     }
-    /* Adjust overlay pixel positions */
-    #title   { top: 90px; left: 360px; font-weight: bold; text-transform: uppercase; }
-    #time    { top: 150px; left: 360px; }
-    #date    { top: 190px; left: 360px; }
-    #type    { top: 230px; left: 360px; }
-    #theatre { top: 150px; left: 560px; }
-    #seat    { top: 190px; left: 560px; }
+    #title { font-weight: bold; text-transform: uppercase; }
   </style>
 </head>
 <body>
-  <div class="ticket-wrap">
+  <div class="ticket-wrap" id="ticket-wrap">
     <img src="IMG_3318.jpeg" alt="Ticket" id="ticket-img">
-    <div id="title" class="overlay">MOVIE TITLE</div>
-    <div id="time" class="overlay">TIME</div>
-    <div id="date" class="overlay">DATE</div>
-    <div id="type" class="overlay">Adult</div>
-    <div id="theatre" class="overlay">Theatre: --</div>
-    <div id="seat" class="overlay">Seat: --</div>
+    <div id="title" class="overlay" data-x="150" data-y="95" data-font="32">MOVIE TITLE</div>
+    <div id="datetime" class="overlay" data-x="360" data-y="160">TIME • DATE</div>
+    <div id="type" class="overlay" data-x="360" data-y="220">Adult</div>
+    <div id="theatre" class="overlay" data-x="640" data-y="160">--</div>
+    <div id="seat" class="overlay" data-x="640" data-y="200">--</div>
   </div>
 
   <script>
@@ -53,12 +52,48 @@
       return p.has(name) ? decodeURIComponent(p.get(name).replace(/\+/g,' ')) : def;
     }
 
-    document.getElementById("title").textContent   = qp("title","Untitled").toUpperCase();
-    document.getElementById("time").textContent    = qp("time","--");
-    document.getElementById("date").textContent    = qp("date","--");
-    document.getElementById("type").textContent    = qp("type","Adult");
-    document.getElementById("theatre").textContent = "Theatre: " + qp("theatre","--");
-    document.getElementById("seat").textContent    = "Seat: " + qp("seat","--");
+    const ticketImg = document.getElementById("ticket-img");
+    const ticketWrap = document.getElementById("ticket-wrap");
+    const overlays = Array.from(document.querySelectorAll('.overlay')).map(el => ({
+      el,
+      x: Number(el.dataset.x || 0),
+      y: Number(el.dataset.y || 0),
+      font: Number(el.dataset.font || 26)
+    }));
+
+    function layoutTicket() {
+      if (!ticketImg.naturalWidth) return;
+
+      const naturalWidth = ticketImg.naturalWidth;
+
+      ticketWrap.style.width = naturalWidth + "px";
+      ticketImg.style.width = naturalWidth + "px";
+
+      overlays.forEach(({ el, x, y, font }) => {
+        el.style.left = x + "px";
+        el.style.top = y + "px";
+        el.style.fontSize = font + "px";
+      });
+    }
+
+    const titleVal = qp("title","Untitled");
+    const timeVal = qp("time","--");
+    const dateVal = qp("date","--");
+    const theatreVal = qp("theatre","--");
+    const seatVal = qp("seat","--");
+
+    const datetimeParts = [timeVal, dateVal].filter(v => v && v !== "--");
+
+    document.getElementById("title").textContent    = titleVal.toUpperCase();
+    document.getElementById("datetime").textContent = datetimeParts.length ? datetimeParts.join(" • ") : "--";
+    document.getElementById("type").textContent     = qp("type","Adult");
+    document.getElementById("theatre").textContent  = theatreVal;
+    document.getElementById("seat").textContent     = seatVal;
+
+    ticketImg.addEventListener('load', layoutTicket);
+    window.addEventListener('resize', layoutTicket);
+
+    if (ticketImg.complete) layoutTicket();
   </script>
 </body>
 </html>

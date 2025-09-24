@@ -1,0 +1,209 @@
+<!--
+File: /index.html
+
+Free, one-file movie ticket generator.
+How to use:
+  https://YOURNAME.github.io/ticket/?movie=Night+with+Devi&time=9:50pm+Sat+3/23/24&theatre=12&seat=K-2&date=3/23/24&price=9.12&rating=PG-13&note=Student&autoOpen=1
+Supported query params (case-insensitive aliases included):
+  movie|title, time, theatre|theater|auditorium, seat, date, price, rating, note, autoOpen=1
+Saving:
+  - Tap "Save Image" (recommended).
+  - Or add autoOpen=1 to try opening the PNG in a new tab (allow pop-ups). iOS still needs a tap/long-press to put it in Photos.
+
+No logos/marks included. For entertainment/props.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Movie Ticket</title>
+
+  <!-- Minimal, readable styling; tuned for iPhone -->
+  <style>
+    :root {
+      --ink:#111; --bg:#f7f7f7; --accent:#e01b24; --muted:#666;
+      --card:#fff; --line:#000;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin:0; background:var(--bg); color:var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, system-ui, sans-serif; }
+    .wrap { min-height:100svh; display:flex; align-items:center; justify-content:center; padding:18px; }
+    .panel { width:min(420px, 96vw); display:flex; gap:14px; }
+
+    /* Ticket body */
+    .ticket {
+      background:var(--card);
+      border:2px solid var(--line);
+      width:100%;
+      padding:16px 16px 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.2);
+      border-radius:10px;
+      position:relative;
+      overflow:hidden;
+    }
+    /* Perforation effect */
+    .ticket:after, .ticket:before {
+      content:"";
+      position:absolute; top:0; bottom:0; width:18px;
+      background: radial-gradient(circle at left center, var(--bg) 9px, transparent 10px) left center/18px 18px repeat-y;
+    }
+    .ticket:before { left:-9px; }
+    .ticket:after  { right:-9px; transform:scaleX(-1); }
+
+    .brand { background:var(--accent); color:#fff; font-weight:800; letter-spacing:.12em; font-size:12px; padding:6px 10px; border-radius:6px; align-self:flex-start; }
+    .title { font-weight:800; font-size:22px; line-height:1.1; margin:10px 0 6px; text-transform:uppercase; }
+    .row { display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px dashed #bbb; font-variant-numeric: tabular-nums; }
+    .row:last-child { border-bottom:0; }
+    .label { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+    .value { font-weight:700; }
+    .big { font-size:18px; }
+
+    .foot { margin-top:10px; display:flex; align-items:center; gap:12px; }
+    .qr { width:80px; height:80px; border:1px solid #000; overflow:hidden; border-radius:4px; background:#fff; }
+    .qr img { width:100%; height:100%; display:block; }
+    .note { font-size:12px; color:var(--muted); line-height:1.25; }
+
+    .cta { margin-top:14px; display:flex; gap:8px; }
+    button, .btn {
+      -webkit-tap-highlight-color: transparent;
+      appearance:none; border:2px solid var(--ink); background:#fff; color:var(--ink);
+      padding:10px 12px; font-weight:800; border-radius:10px; width:100%;
+    }
+    .btn-primary { background:var(--ink); color:#fff; }
+    .hint { text-align:center; font-size:12px; color:var(--muted); margin-top:8px; }
+    /* Image preview area (after capture) */
+    #img-out { display:none; margin-top:14px; border:1px solid #000; border-radius:8px; overflow:hidden; }
+    #img-out img { width:100%; height:auto; display:block; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="panel">
+      <!-- BRANDED STRIP -->
+      <div class="brand" id="brand">CINEMA</div>
+
+      <!-- TICKET -->
+      <div class="ticket" id="ticket">
+        <div class="title" id="mv">MOVIE TITLE</div>
+
+        <div class="row">
+          <div><div class="label">Time</div><div class="value big" id="tm">--</div></div>
+          <div><div class="label">Date</div><div class="value big" id="dt">--</div></div>
+        </div>
+
+        <div class="row">
+          <div><div class="label">Theatre</div><div class="value big" id="th">--</div></div>
+          <div><div class="label">Seat</div><div class="value big" id="st">--</div></div>
+        </div>
+
+        <div class="row">
+          <div><div class="label">Rating</div><div class="value" id="rt">—</div></div>
+          <div><div class="label">Price</div><div class="value" id="pr">—</div></div>
+        </div>
+
+        <div class="foot">
+          <div class="qr"><img id="qr" alt="QR"></div>
+          <div class="note" id="nt">Admit One • Non-Refundable</div>
+        </div>
+
+        <div class="cta">
+          <button class="btn-primary" id="saveBtn">Save Image</button>
+          <button class="btn" id="downloadBtn">Download PNG</button>
+        </div>
+        <div class="hint">Tip: Long-press the image (below) → “Save to Photos”.</div>
+
+        <div id="img-out"><img id="pngPreview" alt="Ticket PNG"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- html2canvas via CDN (lightweight, free) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-nf0gO2Wf6Jv6DsmZ1mwh1r6Vx5nJm3w6pE5F+qv7jv2m0u6r2u2m1YlQ0bJ6+2QO" crossorigin="anonymous"></script>
+  <script>
+    // --- Query helpers (accept multiple spellings) ---
+    function qp(name, def="") {
+      const p = new URLSearchParams(location.search);
+      const keys = [name, name.toLowerCase(), name.toUpperCase()];
+      if (name.toLowerCase()==="theatre") keys.push("theater","auditorium");
+      if (name.toLowerCase()==="movie") keys.push("title");
+      for (const k of keys) {
+        if (p.has(k)) return decodePlus(p.get(k));
+      }
+      return def;
+    }
+    function decodePlus(v){ return v ? decodeURIComponent(v).replace(/\+/g,' ') : v; }
+
+    // --- Fill ticket from query ---
+    const movie = qp("movie","Untitled Feature");
+    const time  = qp("time","—");
+    const date  = qp("date","—");
+    const seat  = qp("seat","—");
+    const th    = qp("theatre","—");
+    const rating= qp("rating","—");
+    const price = qp("price","—");
+    const note  = qp("note","Admit One • Non-Refundable");
+    const autoOpen = ["1","true","yes"].includes(qp("autoOpen","0").toLowerCase());
+
+    document.getElementById("mv").textContent = movie.toUpperCase();
+    document.getElementById("tm").textContent = time;
+    document.getElementById("dt").textContent = date;
+    document.getElementById("st").textContent = seat;
+    document.getElementById("th").textContent = th;
+    document.getElementById("rt").textContent = rating;
+    document.getElementById("pr").textContent = price==="—" ? "—" : `$${price}`;
+    document.getElementById("nt").textContent = note;
+
+    // Simple brand text to suggest "REGAL-like" without marks
+    document.getElementById("brand").textContent = "DELUXE";
+
+    // QR encodes all details so it looks real
+    const qrPayload = JSON.stringify({ movie, time, date, theatre: th, seat, rating, price, note });
+    const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(qrPayload)}`;
+    document.getElementById("qr").src = qrURL;
+
+    // --- Capture logic ---
+    const ticketEl = document.getElementById("ticket");
+    const previewWrap = document.getElementById("img-out");
+    const previewImg = document.getElementById("pngPreview");
+
+    async function makePng() {
+      // High scale for sharper image on Retina
+      const canvas = await html2canvas(ticketEl, {backgroundColor: "#ffffff", scale: 2, useCORS: true, ignoreElements: (el)=>el.id==="img-out" || el.classList?.contains('btn')});
+      return canvas.toDataURL("image/png");
+    }
+
+    async function showPreview() {
+      const dataUrl = await makePng();
+      previewImg.src = dataUrl;
+      previewWrap.style.display = "block";
+      // Why: iOS needs a visible image so the user can long-press → Save to Photos.
+    }
+
+    async function downloadPng() {
+      const dataUrl = await makePng();
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `${movie.replace(/\s+/g,'_')}.png`;
+      document.body.appendChild(a);
+      a.click(); // Why: triggers Safari download to Files. Photos requires user action.
+      a.remove();
+      return dataUrl;
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", showPreview);
+    document.getElementById("downloadBtn").addEventListener("click", downloadPng);
+
+    // Try to auto-open PNG in a new tab if requested (pop-up may be blocked).
+    (async () => {
+      if (autoOpen) {
+        const dataUrl = await makePng();
+        // Open in new tab; user can long-press → Save Image
+        const w = window.open();
+        if (w) { w.document.write(`<meta name="viewport" content="width=device-width,initial-scale=1"><img style="width:100%;height:auto" src="${dataUrl}" alt="ticket">`); }
+        // Also show preview in current page for reliability
+        showPreview();
+      }
+    })();
+  </script>
+</body>
+</html>

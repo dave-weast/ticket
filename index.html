@@ -3,88 +3,71 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Movie Ticket</title>
+  <title>Ticket</title>
+  <!-- Receipt-like font substitute -->
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      padding: 20px;
       background: #222;
       display: flex;
       justify-content: center;
-      font-family: monospace, monospace;
+      padding: 20px;
+      font-family: 'Oxanium', monospace;
     }
     .ticket {
       background: #fff;
-      border: 2px solid #000;
-      width: 500px;
-      height: 200px;
+      width: 320px;
+      height: 600px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      padding: 10px;
-      justify-content: space-between;
-      box-shadow: 4px 4px 10px rgba(0,0,0,.5);
-    }
-    .top {
-      display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
+      line-height: 1.2;
+      overflow: hidden;
     }
     .title {
       font-weight: bold;
-      font-size: 18px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
     }
-    .block {
-      font-size: 14px;
-      margin-top: 4px;
-    }
-    .row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 14px;
-    }
-    .qrrow {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-top: 6px;
-    }
-    .qr img {
-      width: 70px;
-      height: 70px;
-    }
-    .note {
-      font-size: 12px;
-    }
+    .line { margin-bottom: 6px; font-size: 14px; }
+    .row { display: flex; justify-content: space-between; font-size: 14px; }
+    .qr { margin: 10px 0; }
+    .qr img { width: 100px; height: 100px; }
+    .small { font-size: 12px; }
     #preview {
       margin-top: 12px;
       display: none;
+      width: 320px;
       border: 2px solid #000;
-      width: 500px;
     }
   </style>
 </head>
 <body>
   <div>
     <div class="ticket" id="ticket">
-      <div class="top">
-        <div>
-          <div class="title" id="movie">MOVIE</div>
-          <div class="block" id="time">--</div>
-          <div class="block" id="date">--</div>
-        </div>
-        <div>
-          <div class="block">Theatre: <span id="theatre">--</span></div>
-          <div class="block">Seat: <span id="seat">--</span></div>
-        </div>
+      <div class="title" id="movie">MOVIE TITLE</div>
+      <div class="line" id="time">Time</div>
+      <div class="line" id="date">Date</div>
+      <div class="line" id="type">Student</div>
+
+      <div class="qr"><img id="qr" alt="QR"></div>
+
+      <div class="row">
+        <div>Theatre: <span id="theatre">--</span></div>
+        <div>Seat: <span id="seat">--</span></div>
       </div>
       <div class="row">
         <div>Rating: <span id="rating">--</span></div>
         <div>Price: $<span id="price">--</span></div>
       </div>
-      <div class="qrrow">
-        <div class="qr"><img id="qr" alt="QR"></div>
-        <div class="note" id="note">Admit One • Student</div>
-      </div>
+
+      <div class="line small" id="extra">Trans #123456 7:11pm</div>
     </div>
+
     <img id="preview" alt="Ticket Preview">
   </div>
 
@@ -95,35 +78,52 @@
       return p.has(name) ? decodeURIComponent(p.get(name).replace(/\+/g,' ')) : def;
     }
 
-    const movie  = qp("movie","Untitled Movie");
+    const movie  = qp("movie","Untitled Movie").toUpperCase();
     const time   = qp("time","--");
     const date   = qp("date","--");
     const theatre= qp("theatre","--");
     const seat   = qp("seat","--");
     const rating = qp("rating","--");
     const price  = qp("price","--");
-    const note   = qp("note","Admit One");
+    const type   = qp("type","Adult");
+    const extra  = qp("extra","Trans #0000 7:00pm");
 
-    document.getElementById("movie").textContent = movie;
+    const movieEl = document.getElementById("movie");
+    movieEl.textContent = movie;
+
+    // Auto-shrink title font size until it fits
+    function fitText(el, max, min) {
+      let size = max;
+      el.style.fontSize = size + "px";
+      while (el.scrollWidth > el.offsetWidth && size > min) {
+        size -= 1;
+        el.style.fontSize = size + "px";
+      }
+    }
+    fitText(movieEl, 20, 12);
+
     document.getElementById("time").textContent = time;
     document.getElementById("date").textContent = date;
     document.getElementById("theatre").textContent = theatre;
     document.getElementById("seat").textContent = seat;
     document.getElementById("rating").textContent = rating;
     document.getElementById("price").textContent = price;
-    document.getElementById("note").textContent = note;
+    document.getElementById("type").textContent = type;
+    document.getElementById("extra").textContent = extra;
 
-    const qrPayload = `${movie}|${time}|${date}|${theatre}|${seat}|${rating}|${price}|${note}`;
-    document.getElementById("qr").src =
-      `https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(qrPayload)}`;
+    const qrPayload = `${movie}|${time}|${date}|${theatre}|${seat}|${rating}|${price}|${type}`;
+    const qrImg = document.getElementById("qr");
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrPayload)}`;
 
-    // Auto-generate preview PNG on load
-    window.onload = async () => {
-      const canvas = await html2canvas(document.getElementById("ticket"), {scale:2});
+    qrImg.onload = async () => {
+      const canvas = await html2canvas(document.getElementById("ticket"), {
+        scale: 2,
+        useCORS: true
+      });
       const dataUrl = canvas.toDataURL("image/png");
-      const img = document.getElementById("preview");
-      img.src = dataUrl;
-      img.style.display = "block";
+      const preview = document.getElementById("preview");
+      preview.src = dataUrl;
+      preview.style.display = "block";
     };
   </script>
 </body>

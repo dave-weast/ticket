@@ -3,128 +3,58 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ticket</title>
-  <!-- Receipt-like font substitute -->
-  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700&display=swap" rel="stylesheet">
+  <title>Overlay Ticket</title>
   <style>
     body {
       margin: 0;
-      background: #222;
+      background: #111;
       display: flex;
       justify-content: center;
-      padding: 20px;
-      font-family: 'Oxanium', monospace;
+      padding: 10px;
     }
-    .ticket {
-      background: #fff;
-      width: 320px;
-      height: 600px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      line-height: 1.2;
-      overflow: hidden;
+    .ticket-wrap {
+      position: relative;
+      width: 734px;   /* adjust to your image size */
+      height: 1169px; /* adjust to your image size */
+      background: url("IMG_0400.jpeg") no-repeat center/cover;
     }
-    .title {
-      font-weight: bold;
-      margin-bottom: 8px;
-      text-transform: uppercase;
+    .overlay {
+      position: absolute;
+      color: #000;
+      font-family: "Courier New", monospace;
+      font-size: 28px;
       white-space: nowrap;
-      overflow: hidden;
     }
-    .line { margin-bottom: 6px; font-size: 14px; }
-    .row { display: flex; justify-content: space-between; font-size: 14px; }
-    .qr { margin: 10px 0; }
-    .qr img { width: 100px; height: 100px; }
-    .small { font-size: 12px; }
-    #preview {
-      margin-top: 12px;
-      display: none;
-      width: 320px;
-      border: 2px solid #000;
-    }
+    #title   { top: 150px; left: 220px; font-weight: bold; text-transform: uppercase; }
+    #time    { top: 220px; left: 220px; }
+    #date    { top: 270px; left: 220px; }
+    #type    { top: 320px; left: 220px; }
+    #theatre { top: 220px; right: 160px; }
+    #seat    { top: 270px; right: 160px; }
   </style>
 </head>
 <body>
-  <div>
-    <div class="ticket" id="ticket">
-      <div class="title" id="movie">MOVIE TITLE</div>
-      <div class="line" id="time">Time</div>
-      <div class="line" id="date">Date</div>
-      <div class="line" id="type">Student</div>
-
-      <div class="qr"><img id="qr" alt="QR"></div>
-
-      <div class="row">
-        <div>Theatre: <span id="theatre">--</span></div>
-        <div>Seat: <span id="seat">--</span></div>
-      </div>
-      <div class="row">
-        <div>Rating: <span id="rating">--</span></div>
-        <div>Price: $<span id="price">--</span></div>
-      </div>
-
-      <div class="line small" id="extra">Trans #123456 7:11pm</div>
-    </div>
-
-    <img id="preview" alt="Ticket Preview">
+  <div class="ticket-wrap">
+    <div id="title" class="overlay">MOVIE TITLE</div>
+    <div id="time" class="overlay">TIME</div>
+    <div id="date" class="overlay">DATE</div>
+    <div id="type" class="overlay">Adult</div>
+    <div id="theatre" class="overlay">Theatre: --</div>
+    <div id="seat" class="overlay">Seat: --</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     function qp(name, def="") {
       const p = new URLSearchParams(location.search);
       return p.has(name) ? decodeURIComponent(p.get(name).replace(/\+/g,' ')) : def;
     }
 
-    const movie  = qp("movie","Untitled Movie").toUpperCase();
-    const time   = qp("time","--");
-    const date   = qp("date","--");
-    const theatre= qp("theatre","--");
-    const seat   = qp("seat","--");
-    const rating = qp("rating","--");
-    const price  = qp("price","--");
-    const type   = qp("type","Adult");
-    const extra  = qp("extra","Trans #0000 7:00pm");
-
-    const movieEl = document.getElementById("movie");
-    movieEl.textContent = movie;
-
-    // Auto-shrink title font size until it fits
-    function fitText(el, max, min) {
-      let size = max;
-      el.style.fontSize = size + "px";
-      while (el.scrollWidth > el.offsetWidth && size > min) {
-        size -= 1;
-        el.style.fontSize = size + "px";
-      }
-    }
-    fitText(movieEl, 20, 12);
-
-    document.getElementById("time").textContent = time;
-    document.getElementById("date").textContent = date;
-    document.getElementById("theatre").textContent = theatre;
-    document.getElementById("seat").textContent = seat;
-    document.getElementById("rating").textContent = rating;
-    document.getElementById("price").textContent = price;
-    document.getElementById("type").textContent = type;
-    document.getElementById("extra").textContent = extra;
-
-    const qrPayload = `${movie}|${time}|${date}|${theatre}|${seat}|${rating}|${price}|${type}`;
-    const qrImg = document.getElementById("qr");
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(qrPayload)}`;
-
-    qrImg.onload = async () => {
-      const canvas = await html2canvas(document.getElementById("ticket"), {
-        scale: 2,
-        useCORS: true
-      });
-      const dataUrl = canvas.toDataURL("image/png");
-      const preview = document.getElementById("preview");
-      preview.src = dataUrl;
-      preview.style.display = "block";
-    };
+    document.getElementById("title").textContent   = qp("title","Untitled").toUpperCase();
+    document.getElementById("time").textContent    = qp("time","--");
+    document.getElementById("date").textContent    = qp("date","--");
+    document.getElementById("type").textContent    = qp("type","Adult");
+    document.getElementById("theatre").textContent = "Theatre: " + qp("theatre","--");
+    document.getElementById("seat").textContent    = "Seat: " + qp("seat","--");
   </script>
 </body>
 </html>

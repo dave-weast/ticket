@@ -14,30 +14,34 @@
     }
     .ticket-wrap {
       position: relative;
-      width: 734px;   /* actual image width */
-      height: 1169px; /* actual image height */
-      background: url("IMG_3318.jpeg") no-repeat top left;
-      background-size: cover; /* exact image size */
+      display: inline-block;
+    }
+    .ticket-wrap img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: none; /* don’t scale down */
+      max-height: none;
     }
     .overlay {
       position: absolute;
       color: #000;
       font-family: "Courier New", monospace;
-      font-weight: bold;
+      font-size: 26px;
       white-space: nowrap;
-      font-size: 24px; /* fixed size */
     }
-    /* Adjust these pixel positions until text matches ticket */
-    #title   { top: 120px; left: 220px; text-transform: uppercase; }
-    #time    { top: 200px; left: 220px; }
-    #date    { top: 240px; left: 220px; }
-    #type    { top: 280px; left: 220px; }
-    #theatre { top: 200px; left: 500px; }
-    #seat    { top: 240px; left: 500px; }
+    /* Adjust these px values until aligned */
+    #title   { top: 90px; left: 360px; font-weight: bold; text-transform: uppercase; }
+    #time    { top: 150px; left: 360px; }
+    #date    { top: 190px; left: 360px; }
+    #type    { top: 230px; left: 360px; }
+    #theatre { top: 150px; left: 560px; }
+    #seat    { top: 190px; left: 560px; }
   </style>
 </head>
 <body>
   <div class="ticket-wrap">
+    <img src="IMG_3318.jpeg" alt="Ticket">
     <div id="title" class="overlay">MOVIE TITLE</div>
     <div id="time" class="overlay">TIME</div>
     <div id="date" class="overlay">DATE</div>

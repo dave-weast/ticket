@@ -14,9 +14,10 @@
     }
     .ticket-wrap {
       position: relative;
-      width: 734px;   /* adjust to your image size */
-      height: 1169px; /* adjust to your image size */
-      background: url("IMG_0400.jpeg") no-repeat center/cover;
+      width: 734px;   /* replace with actual image width */
+      height: 1169px; /* replace with actual image height */
+      background: url("IMG_0400.jpeg") no-repeat center/contain;
+      background-size: cover;
     }
     .overlay {
       position: absolute;
@@ -25,12 +26,12 @@
       font-size: 28px;
       white-space: nowrap;
     }
-    #title   { top: 150px; left: 220px; font-weight: bold; text-transform: uppercase; }
-    #time    { top: 220px; left: 220px; }
-    #date    { top: 270px; left: 220px; }
-    #type    { top: 320px; left: 220px; }
-    #theatre { top: 220px; right: 160px; }
-    #seat    { top: 270px; right: 160px; }
+    #title   { top: 120px; left: 200px; font-weight: bold; text-transform: uppercase; }
+    #time    { top: 200px; left: 200px; }
+    #date    { top: 240px; left: 200px; }
+    #type    { top: 280px; left: 200px; }
+    #theatre { top: 200px; right: 160px; }
+    #seat    { top: 240px; right: 160px; }
   </style>
 </head>
 <body>
@@ -38,7 +39,7 @@
     <div id="title" class="overlay">MOVIE TITLE</div>
     <div id="time" class="overlay">TIME</div>
     <div id="date" class="overlay">DATE</div>
-    <div id="type" class="overlay">Adult</div>
+    <div id="type" class="overlay">TYPE</div>
     <div id="theatre" class="overlay">Theatre: --</div>
     <div id="seat" class="overlay">Seat: --</div>
   </div>

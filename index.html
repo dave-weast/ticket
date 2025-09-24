@@ -18,10 +18,7 @@
     }
     .ticket-wrap img {
       display: block;
-      width: auto;
-      height: auto;
-      max-width: none; /* don’t scale down */
-      max-height: none;
+      /* 🔥 no width/height here — keep natural size */
     }
     .overlay {
       position: absolute;
@@ -30,7 +27,7 @@
       font-size: 26px;
       white-space: nowrap;
     }
-    /* Adjust these px values until aligned */
+    /* Adjust overlay pixel positions */
     #title   { top: 90px; left: 360px; font-weight: bold; text-transform: uppercase; }
     #time    { top: 150px; left: 360px; }
     #date    { top: 190px; left: 360px; }
@@ -41,7 +38,7 @@
 </head>
 <body>
   <div class="ticket-wrap">
-    <img src="IMG_3318.jpeg" alt="Ticket">
+    <img src="IMG_3318.jpeg" alt="Ticket" id="ticket-img">
     <div id="title" class="overlay">MOVIE TITLE</div>
     <div id="time" class="overlay">TIME</div>
     <div id="date" class="overlay">DATE</div>

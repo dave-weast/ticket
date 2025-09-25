@@ -51,6 +51,7 @@
       color: #101010;
       font-family: 'Barlow Condensed', 'Roboto', sans-serif;
       text-transform: uppercase;
+      transform-origin: center center;
     }
 
     .ticket-overlay span {
@@ -422,13 +423,190 @@
     (function () {
       const params = new URLSearchParams(window.location.search);
       const overlay = document.querySelectorAll('[data-field]');
-
       overlay.forEach((node) => {
         const key = node.dataset.field;
         const rawValue = params.get(key);
         const value = rawValue ? rawValue : node.dataset.default || '';
         node.textContent = value;
       });
+
+      const ticketLink = document.querySelector('.ticket-image');
+      if (!ticketLink) {
+        return;
+      }
+
+      const ticketImage = ticketLink.querySelector('img');
+      const ticketOverlay = ticketLink.querySelector('.ticket-overlay');
+
+      if (!ticketImage || !ticketOverlay || ticketImage.dataset.composited === 'true') {
+        return;
+      }
+
+      const imageReady = ticketImage.complete
+        ? Promise.resolve()
+        : new Promise((resolve) => ticketImage.addEventListener('load', resolve, { once: true }));
+      const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+
+      Promise.all([imageReady, fontsReady]).then(() => {
+        if (!ticketImage.naturalWidth || !ticketImage.naturalHeight || ticketImage.dataset.composited === 'true') {
+          return;
+        }
+
+        const orientation = detectOrientation(ticketImage);
+        applyOverlayRotation(ticketOverlay, orientation);
+
+        requestAnimationFrame(() => {
+          mergeOverlay(ticketLink, ticketImage, ticketOverlay).catch((error) => {
+            console.error('Unable to merge ticket overlay', error);
+          });
+        });
+      });
+
+      function applyOverlayRotation(overlayNode, orientation) {
+        if (!overlayNode) {
+          return;
+        }
+
+        if (orientation === 'landscape-clockwise') {
+          overlayNode.style.transform = 'rotate(90deg)';
+        } else if (orientation === 'landscape-counterclockwise') {
+          overlayNode.style.transform = 'rotate(-90deg)';
+        } else {
+          overlayNode.style.transform = 'none';
+        }
+      }
+
+      function detectOrientation(imageNode) {
+        if (imageNode.naturalWidth <= imageNode.naturalHeight) {
+          return 'portrait';
+        }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = imageNode.naturalWidth;
+        tempCanvas.height = imageNode.naturalHeight;
+        const ctx = tempCanvas.getContext('2d');
+
+        if (!ctx) {
+          return 'landscape-clockwise';
+        }
+
+        ctx.drawImage(imageNode, 0, 0);
+
+        const measureEdge = (x, y, width, height) => {
+          const data = ctx.getImageData(x, y, width, height).data;
+          let score = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            score += Math.max(0, r - (g + b) / 2);
+          }
+          return score / Math.max(1, (width * height));
+        };
+
+        const edgeHeight = Math.max(1, Math.round(tempCanvas.height * 0.12));
+        const topScore = measureEdge(0, 0, tempCanvas.width, edgeHeight);
+        const bottomScore = measureEdge(0, tempCanvas.height - edgeHeight, tempCanvas.width, edgeHeight);
+
+        if (bottomScore > topScore) {
+          return 'landscape-clockwise';
+        }
+
+        if (topScore > bottomScore) {
+          return 'landscape-counterclockwise';
+        }
+
+        const edgeWidth = Math.max(1, Math.round(tempCanvas.width * 0.12));
+        const rightScore = measureEdge(tempCanvas.width - edgeWidth, 0, edgeWidth, tempCanvas.height);
+        const leftScore = measureEdge(0, 0, edgeWidth, tempCanvas.height);
+
+        return rightScore >= leftScore ? 'landscape-clockwise' : 'landscape-counterclockwise';
+      }
+
+      function mergeOverlay(linkNode, imageNode, overlayNode) {
+        return new Promise((resolve, reject) => {
+          const rect = imageNode.getBoundingClientRect();
+          const displayWidth = Math.round(rect.width);
+          const displayHeight = Math.round(rect.height);
+
+          if (!displayWidth || !displayHeight) {
+            resolve();
+            return;
+          }
+
+          const ratio = window.devicePixelRatio || 1;
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(displayWidth * ratio);
+          canvas.height = Math.round(displayHeight * ratio);
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            resolve();
+            return;
+          }
+
+          ctx.scale(ratio, ratio);
+          ctx.drawImage(imageNode, 0, 0, displayWidth, displayHeight);
+
+          const overlayDataUrl = buildOverlayDataUrl(overlayNode, displayWidth, displayHeight);
+          loadImage(overlayDataUrl)
+            .then((overlayImage) => {
+              ctx.drawImage(overlayImage, 0, 0, displayWidth, displayHeight);
+              const mergedUrl = canvas.toDataURL('image/png');
+              imageNode.dataset.composited = 'true';
+              imageNode.src = mergedUrl;
+              linkNode.href = mergedUrl;
+              linkNode.setAttribute('download', 'ticket.png');
+              overlayNode.style.display = 'none';
+              resolve();
+            })
+            .catch(reject);
+        });
+      }
+
+      function buildOverlayDataUrl(overlayNode, width, height) {
+        const wrapper = document.createElement('div');
+        wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        wrapper.style.position = 'relative';
+        wrapper.style.width = `${width}px`;
+        wrapper.style.height = `${height}px`;
+
+        const clone = overlayNode.cloneNode(true);
+        clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+        wrapper.appendChild(clone);
+        applyInlineStyles(overlayNode, clone);
+
+        const serializer = new XMLSerializer();
+        const html = serializer.serializeToString(wrapper);
+        const styleBlock = "<style>@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap');</style>";
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${styleBlock}<foreignObject width="100%" height="100%">${html}</foreignObject></svg>`;
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      }
+
+      function applyInlineStyles(sourceNode, targetNode) {
+        const sourceElements = [sourceNode, ...sourceNode.querySelectorAll('*')];
+        const targetElements = [targetNode, ...targetNode.querySelectorAll('*')];
+
+        sourceElements.forEach((element, index) => {
+          const computed = window.getComputedStyle(element);
+          let cssText = '';
+          for (let i = 0; i < computed.length; i++) {
+            const property = computed[i];
+            const value = computed.getPropertyValue(property);
+            cssText += `${property}:${value};`;
+          }
+          targetElements[index].setAttribute('style', cssText);
+        });
+      }
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const imgNode = new Image();
+          imgNode.onload = () => resolve(imgNode);
+          imgNode.onerror = reject;
+          imgNode.src = src;
+        });
+      }
     })();
   </script>
 </body>

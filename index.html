@@ -302,6 +302,16 @@
 </head>
 <body>
   <h1>Tap your custom URL to refresh the ticket</h1>
+  <!--
+    URL scheme:
+    /index.html?title=Movie+Title&subtitle=Event+Subtitle&date=2024-10-13&time=7:15+PM&seat=I6&theatre=4&qr=Custom+QR+Payload
+
+    Supported aliases:
+    - "movie" for title
+    - "event" for subtitle
+    - "datetime" ("TIME | DATE") in place of separate date/time
+    - "theater" in place of theatre
+  -->
   <div class="ticket-stage">
     <div class="ticket-wrapper" id="ticket-wrapper">
       <article class="ticket" id="ticket">

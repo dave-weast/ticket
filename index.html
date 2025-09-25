@@ -26,15 +26,28 @@
 
     body {
       font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-      background: radial-gradient(circle at top, #1d1d1d 0%, #050505 100%);
+      background: #000;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 2.5rem;
-      padding: 3rem 1rem;
-      color: var(--ink);
+      margin: 0;
+      padding: 0;
+    }
+
+    .ticket-image {
+      display: inline-flex;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .ticket-image img {
+      display: block;
+      width: auto;
+      height: auto;
+      max-width: 90vw;
+      max-height: 90vh;
     }
 
     h1 {
@@ -310,274 +323,8 @@
   </style>
 </head>
 <body>
-  <h1>Tap your custom URL to refresh the ticket</h1>
-  <!--
-    URL scheme:
-    /index.html?title=Movie+Title&subtitle=Event+Subtitle&date=2024-10-13&time=7:15+PM&seat=I6&theatre=4&qr=Custom+QR+Payload
-
-    Supported aliases:
-    - "movie" for title
-    - "event" for subtitle
-    - "datetime" ("TIME | DATE") in place of separate date/time
-    - "theater" in place of theatre
-  -->
-  <div class="ticket-stage">
-    <div class="ticket-wrapper" id="ticket-wrapper">
-      <article class="ticket" id="ticket">
-        <header>
-          <div class="ticket-headline" data-keys="title,movie,film">Saturday Night</div>
-          <div class="ticket-subtitle" data-keys="tagline">Premium Presentation</div>
-        </header>
-        <section class="ticket-body">
-          <div class="ticket-main">
-            <div class="show-details">
-              <strong data-keys="time,showtime">7:15 PM</strong>
-              <span data-keys="date,showdate">Sun, Oct 13 2024</span>
-              <span data-keys="day">Adult Evening</span>
-            </div>
-            <div class="ticket-type" data-keys="type,tickettype,admit">Adult</div>
-            <div class="qr-block">
-              <div class="qr" id="qr">
-                <span>QR</span>
-              </div>
-              <div class="qr-notes">
-                <strong data-keys="venue,theatername,location">Short Pump 14</strong>
-                <span data-keys="price">Adult $14.49 CRED</span>
-                <span data-keys="transaction,trans">Trans #: 443721</span>
-                <span data-keys="printed">10/13/24 • 7:15 PM</span>
-                <span data-keys="agent">07300CIN0 • Heather</span>
-              </div>
-            </div>
-            <footer class="ticket-footer">
-              <div class="footer-compact">
-                <span data-keys="admitline">Admit One</span>
-                <span data-keys="terms">No refunds after showtime</span>
-                <span data-keys="rating">PG-13</span>
-              </div>
-              <span data-keys="footer">Thank you for choosing Regal.</span>
-            </footer>
-          </div>
-          <aside class="ticket-side">
-            <div>
-              <div class="side-label">Theatre</div>
-              <div class="side-value" data-keys="theatre,theater">4</div>
-            </div>
-            <div>
-              <div class="side-label">Seat</div>
-              <div class="side-value" data-keys="seat">I6</div>
-            </div>
-          </aside>
-        </section>
-      </article>
-    </div>
-  </div>
-    <div class="actions">
-      <button type="button" id="save-ticket">Save ticket as image</button>
-      <button type="button" id="copy-ticket-url">Copy ticket URL</button>
-      <p class="share-url" id="ticket-url-display" aria-live="polite"></p>
-    </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha256-2n1ytY1/6Yr2vNh+lX6YsJhBKt3vnDnN/SUXOcDS4Fc=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" integrity="sha256-g9npKfoYZz+uOCoToYtL6vhfVqlhK/SXxPxq8np5xpo=" crossorigin="anonymous"></script>
-  <script>
-    function decodeParam(value) {
-      try {
-        return decodeURIComponent(value.replace(/\+/g, ' '));
-      } catch (e) {
-        return value;
-      }
-    }
-
-    function getParams() {
-      return new URLSearchParams(window.location.search);
-    }
-
-    function buildShareableUrl() {
-      const baseUrl = `${window.location.origin}${window.location.pathname}`;
-      const params = new URLSearchParams();
-      const keyValues = new Map();
-
-      document.querySelectorAll('[data-keys]').forEach((el) => {
-        const keys = el.dataset.keys.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
-        if (!keys.length) return;
-        const text = el.textContent.trim();
-        if (!text) return;
-        keys.forEach((key) => {
-          if (!keyValues.has(key)) {
-            keyValues.set(key, text);
-          }
-        });
-      });
-
-      const prioritizedKeys = [
-        'title',
-        'subtitle',
-        'movie',
-        'feature',
-        'theatre',
-        'theater',
-        'auditorium',
-        'seat',
-        'tickets',
-        'qr'
-      ];
-      prioritizedKeys.forEach((key) => {
-        const value = keyValues.get(key);
-        if (value) {
-          params.set(key, value);
-        }
-      });
-
-      const timeValue = keyValues.get('time');
-      if (timeValue) {
-        params.set('time', timeValue);
-      }
-
-      const dateValue = keyValues.get('date');
-      if (dateValue) {
-        params.set('date', dateValue);
-      }
-
-      const datetimeValue = keyValues.get('datetime');
-      if (datetimeValue) {
-        params.set('datetime', datetimeValue);
-      } else if (timeValue && dateValue) {
-        params.set('datetime', `${timeValue} | ${dateValue}`);
-      }
-
-      const query = params.toString();
-      return query ? `${baseUrl}?${query}` : baseUrl;
-    }
-
-    function updateShareUrlDisplay(forcedUrl) {
-      const display = document.getElementById('ticket-url-display');
-      if (!display) return;
-      const url = forcedUrl || buildShareableUrl();
-      display.textContent = url;
-    }
-
-    function signalCopySuccess(url) {
-      updateShareUrlDisplay(url);
-      const copyButton = document.getElementById('copy-ticket-url');
-      if (!copyButton) return;
-      const originalText = copyButton.textContent;
-      copyButton.textContent = 'Link copied!';
-      setTimeout(() => {
-        copyButton.textContent = originalText;
-      }, 2000);
-    }
-
-    function fallbackCopy(url) {
-      const textarea = document.createElement('textarea');
-      textarea.value = url;
-      textarea.setAttribute('readonly', '');
-      textarea.style.position = 'absolute';
-      textarea.style.left = '-9999px';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error('Copy failed', err);
-      }
-      document.body.removeChild(textarea);
-      signalCopySuccess(url);
-    }
-
-    function copyTicketUrl() {
-      const url = buildShareableUrl();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          signalCopySuccess(url);
-        }).catch(() => {
-          fallbackCopy(url);
-        });
-      } else {
-        fallbackCopy(url);
-      }
-    }
-
-    function populateFields() {
-      const params = getParams();
-      const fields = document.querySelectorAll('[data-keys]');
-
-      fields.forEach((el) => {
-        const keys = el.dataset.keys.split(',').map(k => k.trim().toLowerCase()).filter(Boolean);
-        const key = keys.find(k => params.has(k));
-        if (!key) return;
-        let value = decodeParam(params.get(key));
-
-        if (el.dataset.uppercase === 'true') {
-          value = value.toUpperCase();
-        }
-
-        el.textContent = value;
-      });
-
-      const timeElement = document.querySelector('[data-keys~="time"]');
-      const dateElement = document.querySelector('[data-keys~="date"]');
-      if (params.has('datetime') && timeElement && dateElement) {
-        const combined = decodeParam(params.get('datetime'));
-        const [timePart, datePart] = combined.split(/\s*\|\s*|\s*•\s*|\s*,\s*/);
-        if (timePart) timeElement.textContent = timePart;
-        if (datePart) dateElement.textContent = datePart;
-      }
-
-      const qrValue = params.has('qr')
-        ? decodeParam(params.get('qr'))
-        : [
-            params.get('title') || params.get('movie') || 'Saturday Night',
-            params.get('date') || '2024-10-13',
-            params.get('time') || '7:15 PM',
-            params.get('seat') || 'I6'
-          ].filter(Boolean).join(' | ');
-
-      const qrContainer = document.getElementById('qr');
-      qrContainer.innerHTML = '';
-      QRCode.toCanvas(qrValue, {
-        margin: 1,
-        scale: 6,
-        color: {
-          dark: '#000000',
-          light: '#ffffff'
-        }
-      }, (error, canvas) => {
-        if (error) {
-          qrContainer.textContent = 'QR';
-          return;
-        }
-        canvas.setAttribute('aria-label', qrValue);
-        qrContainer.appendChild(canvas);
-      });
-
-      updateShareUrlDisplay();
-    }
-
-    function downloadTicket() {
-      const ticketNode = document.getElementById('ticket-wrapper');
-      document.body.classList.add('exporting');
-      html2canvas(ticketNode, {
-        backgroundColor: null,
-        scale: window.devicePixelRatio > 2 ? 2 : window.devicePixelRatio
-      }).then((canvas) => {
-        const titleEl = document.querySelector('[data-keys^="title"]');
-        const title = titleEl ? titleEl.textContent.trim().replace(/\s+/g, '-') : 'ticket';
-        const link = document.createElement('a');
-        link.download = `${title || 'ticket'}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      }).finally(() => {
-        document.body.classList.remove('exporting');
-      });
-    }
-
-    document.getElementById('save-ticket').addEventListener('click', downloadTicket);
-    const copyButton = document.getElementById('copy-ticket-url');
-    if (copyButton) {
-      copyButton.addEventListener('click', copyTicketUrl);
-    }
-    window.addEventListener('load', populateFields);
-    window.addEventListener('popstate', populateFields);
-  </script>
+  <a class="ticket-image" href="IMG_3318.jpeg" download>
+    <img src="IMG_3318.jpeg" alt="Printed Regal ticket for Saturday Night with QR code">
+  </a>
 </body>
 </html>

@@ -40,6 +40,88 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    .ticket-overlay {
+      position: absolute;
+      inset: 0;
+      display: block;
+      pointer-events: none;
+      color: #101010;
+      font-family: 'Barlow Condensed', 'Roboto', sans-serif;
+      text-transform: uppercase;
+    }
+
+    .ticket-overlay span {
+      position: absolute;
+      white-space: nowrap;
+      letter-spacing: 0.14em;
+      font-weight: 600;
+      font-size: 1.35rem;
+    }
+
+    .ticket-overlay .overlay-headline {
+      top: 9.5%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2.9rem;
+      letter-spacing: 0.12em;
+    }
+
+    .ticket-overlay .overlay-subtitle {
+      top: 16.5%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.15rem;
+      letter-spacing: 0.28em;
+    }
+
+    .ticket-overlay .overlay-showtime {
+      top: 34%;
+      left: 17%;
+    }
+
+    .ticket-overlay .overlay-seat {
+      top: 42%;
+      left: 17%;
+    }
+
+    .ticket-overlay .overlay-admit {
+      top: 50.5%;
+      left: 17%;
+      font-size: 1.1rem;
+    }
+
+    .ticket-overlay .overlay-type {
+      top: 27%;
+      right: 13%;
+      font-size: 1.05rem;
+      background: rgba(209, 43, 44, 0.88);
+      color: #fff9f6;
+      padding: 0.35rem 0.7rem;
+      border-radius: 6px;
+      letter-spacing: 0.32em;
+    }
+
+    .ticket-overlay .overlay-side {
+      bottom: 12%;
+      right: 6%;
+      font-size: 2.9rem;
+      letter-spacing: 0.18em;
+    }
+
+    .ticket-overlay .overlay-footer {
+      bottom: 6.5%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Roboto Mono', 'Roboto', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+      text-transform: none;
+      white-space: normal;
+      width: 70%;
+      text-align: center;
     }
 
     .ticket-image img {
@@ -323,8 +405,31 @@
   </style>
 </head>
 <body>
-  <a class="ticket-image" href="IMG_3318.jpeg" download>
+  <a class="ticket-image" href="IMG_3318.jpeg">
     <img src="IMG_3318.jpeg" alt="Printed Regal ticket for Saturday Night with QR code">
+    <span class="ticket-overlay">
+      <span class="overlay-headline" data-field="headline" data-default="Saturday Night"></span>
+      <span class="overlay-subtitle" data-field="subtitle" data-default="Premiere"></span>
+      <span class="overlay-showtime" data-field="showtime" data-default="SAT • 7:30 PM"></span>
+      <span class="overlay-seat" data-field="seat" data-default="SEAT H12"></span>
+      <span class="overlay-admit" data-field="admit" data-default="ADMIT ONE"></span>
+      <span class="overlay-type" data-field="type" data-default="VIP"></span>
+      <span class="overlay-side" data-field="side" data-default="H12"></span>
+      <span class="overlay-footer" data-field="notes" data-default="Scan the QR code at entry • Non-transferable"></span>
+    </span>
   </a>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const overlay = document.querySelectorAll('[data-field]');
+
+      overlay.forEach((node) => {
+        const key = node.dataset.field;
+        const rawValue = params.get(key);
+        const value = rawValue ? rawValue : node.dataset.default || '';
+        node.textContent = value;
+      });
+    })();
+  </script>
 </body>
 </html>

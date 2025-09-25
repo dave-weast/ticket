@@ -3,610 +3,446 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Regal Ticket Generator</title>
+  <title>Matrix Ticket Generator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
   <style>
     :root {
-      color-scheme: only dark;
-      --paper: #f5f0e8;
-      --ink: #111;
-      --accent: #d12b2c;
-      --muted: #666;
-      --stub: #e8dfd3;
-      --shadow: rgba(0, 0, 0, 0.4);
-      font-size: clamp(14px, 2vw, 18px);
+      --paper: #f8f3eb;
+      --ink: #1c1c1c;
+      --muted: #555;
+      --accent: #ca2c2f;
+      --stub: #f0e7d9;
+      --perforation: rgba(0, 0, 0, 0.08);
+      font-size: clamp(14px, 1.45vw, 18px);
     }
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
-      margin: 0;
     }
 
     body {
-      font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-      background: #000;
+      margin: 0;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0;
-      padding: 0;
+      background: radial-gradient(circle at top left, #1a1a1a, #050505 68%);
+      color: var(--ink);
+      font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+      padding: clamp(16px, 4vw, 48px);
     }
 
-    .ticket-image {
-      display: inline-flex;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-      position: relative;
+    button {
+      font: inherit;
     }
 
-    .ticket-overlay {
-      position: absolute;
-      inset: 0;
-      display: block;
-      pointer-events: none;
-      color: #101010;
-      font-family: 'Barlow Condensed', 'Roboto', sans-serif;
-      text-transform: uppercase;
-      transform-origin: center center;
-    }
-
-    .ticket-overlay span {
-      position: absolute;
-      white-space: nowrap;
-      letter-spacing: 0.14em;
-      font-weight: 600;
-      font-size: 1.35rem;
-    }
-
-    .ticket-overlay .overlay-headline {
-      top: 9.5%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 2.9rem;
-      letter-spacing: 0.12em;
-    }
-
-    .ticket-overlay .overlay-subtitle {
-      top: 16.5%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.15rem;
-      letter-spacing: 0.28em;
-    }
-
-    .ticket-overlay .overlay-showtime {
-      top: 34%;
-      left: 17%;
-    }
-
-    .ticket-overlay .overlay-seat {
-      top: 42%;
-      left: 17%;
-    }
-
-    .ticket-overlay .overlay-admit {
-      top: 50.5%;
-      left: 17%;
-      font-size: 1.1rem;
-    }
-
-    .ticket-overlay .overlay-type {
-      top: 27%;
-      right: 13%;
-      font-size: 1.05rem;
-      background: rgba(209, 43, 44, 0.88);
-      color: #fff9f6;
-      padding: 0.35rem 0.7rem;
-      border-radius: 6px;
-      letter-spacing: 0.32em;
-    }
-
-    .ticket-overlay .overlay-side {
-      bottom: 12%;
-      right: 6%;
-      font-size: 2.9rem;
-      letter-spacing: 0.18em;
-    }
-
-    .ticket-overlay .overlay-footer {
-      bottom: 6.5%;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: 'Roboto Mono', 'Roboto', monospace;
-      font-size: 0.82rem;
-      letter-spacing: 0.1em;
-      text-transform: none;
-      white-space: normal;
-      width: 70%;
-      text-align: center;
-    }
-
-    .ticket-image img {
-      display: block;
-      width: auto;
-      height: auto;
-      max-width: 90vw;
-      max-height: 90vh;
-    }
-
-    h1 {
-      color: #f9f9f9;
-      letter-spacing: 0.08em;
-      font-weight: 400;
-      text-transform: uppercase;
-      font-size: 1rem;
-    }
-
-    .ticket-stage {
-      position: relative;
-      width: min(90vw, 520px);
-      aspect-ratio: 4 / 9;
+    .wrapper {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      perspective: 2400px;
-    }
-
-    .ticket-wrapper {
-      transform: rotate(-90deg) rotateX(9deg);
-      transform-origin: center;
-      filter: drop-shadow(0 28px 32px var(--shadow));
+      gap: 18px;
     }
 
     .ticket {
-      width: 420px;
-      height: 900px;
-      background: var(--paper);
-      background-image:
-        radial-gradient(circle at 12% 18%, rgba(0, 0, 0, 0.08) 0%, transparent 58%),
-        linear-gradient(180deg, rgba(0,0,0,0.05) 0%, transparent 18%),
-        linear-gradient(90deg, rgba(0,0,0,0.03) 0%, transparent 100%);
-      border-radius: 14px;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      padding: 46px 34px 36px;
-      display: flex;
-      flex-direction: column;
       position: relative;
+      width: min(84vw, 360px);
+      height: calc(min(84vw, 360px) * 2.45);
+      background: var(--paper);
+      border-radius: 18px;
+      box-shadow: 0 26px 55px rgba(0, 0, 0, 0.55);
       overflow: hidden;
-    }
-
-    .ticket::before,
-    .ticket::after {
-      content: '';
-      position: absolute;
-      width: 100%;
-      height: 16px;
-      left: 0;
-      background: linear-gradient(90deg, transparent 0 8%, rgba(0, 0, 0, 0.07) 8% 18%, transparent 18% 82%, rgba(0,0,0,0.07) 82% 92%, transparent 92% 100%);
-    }
-
-    .ticket::before { top: 0; }
-    .ticket::after { bottom: 0; }
-
-    .ticket-headline {
-      font-family: 'Barlow Condensed', 'Roboto', sans-serif;
-      text-transform: uppercase;
-      font-size: 3.25rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.35rem;
-    }
-
-    .ticket-subtitle {
-      font-family: 'Barlow Condensed', 'Roboto', sans-serif;
-      text-transform: uppercase;
-      font-size: 1.4rem;
-      letter-spacing: 0.24em;
-      color: var(--muted);
-      margin-bottom: 1.6rem;
-    }
-
-    .ticket-body {
-      display: grid;
-      grid-template-columns: 1fr 118px;
-      gap: 1.75rem;
-      flex: 1;
-    }
-
-    .ticket-main {
       display: flex;
       flex-direction: column;
-      gap: 1.6rem;
+      padding: 32px 26px 22px;
+      isolation: isolate;
     }
 
-    .show-details {
-      font-family: 'Roboto', sans-serif;
+    .ticket::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(rgba(0, 0, 0, 0.08) 12%, transparent 13%),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.035) 0 1px, transparent 1px 100%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.025) 0 1px, transparent 1px 100%);
+      background-size: 8px 8px, 12px 12px, 14px 14px;
+      mix-blend-mode: multiply;
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
+    .ticket::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      bottom: 20px;
+      width: 0;
+      border-left: 1px dashed var(--perforation);
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .ticket__inner {
+      position: relative;
+      flex: 1;
       display: grid;
-      gap: 0.3rem;
-      font-size: 1.05rem;
-      line-height: 1.35;
+      grid-template-columns: 124px 1fr;
+      gap: 22px;
     }
 
-    .show-details strong {
-      font-size: 1.25rem;
-      letter-spacing: 0.08em;
-      font-weight: 600;
-    }
-
-    .ticket-type {
-      font-family: 'Barlow Condensed', 'Roboto', sans-serif;
-      background: var(--accent);
-      color: #fff9f6;
-      padding: 0.5rem 0.9rem;
-      border-radius: 6px;
-      align-self: start;
-      letter-spacing: 0.25em;
-      font-size: 0.95rem;
-    }
-
-    .qr-block {
-      display: grid;
-      grid-template-columns: 140px 1fr;
-      gap: 1.2rem;
+    .ticket__spine {
+      position: relative;
+      display: flex;
+      justify-content: center;
       align-items: center;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.06), transparent 65%);
+      border-radius: 12px;
     }
 
-    .qr {
-      width: 140px;
-      height: 140px;
-      background: repeating-linear-gradient(45deg, rgba(0,0,0,0.08) 0, rgba(0,0,0,0.08) 4px, transparent 4px, transparent 8px);
+    .spine-text {
+      font-family: 'VT323', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 1.9rem;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .spine-text span {
+      display: block;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .spine-text .spine__showtime {
+      font-size: 1.25rem;
+      letter-spacing: 0.12em;
+    }
+
+    .spine-text .spine__type {
+      font-size: 1.1rem;
+      letter-spacing: 0.18em;
+    }
+
+    .ticket__content {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding-right: 4px;
+    }
+
+    .ticket__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .ticket__theatre {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .label {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: 0.22em;
+    }
+
+    .value {
+      font-family: 'VT323', monospace;
+      font-size: 3.8rem;
+      line-height: 1;
+      letter-spacing: 0.12em;
+    }
+
+    .value--seat {
+      font-size: 4.8rem;
+    }
+
+    .ticket__qr {
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
-      overflow: hidden;
     }
 
-    .qr canvas {
-      width: 100% !important;
-      height: 100% !important;
+    .ticket__qr img {
+      display: block;
+      width: 126px;
+      height: 126px;
+      object-fit: contain;
+      filter: contrast(1.1);
     }
 
-    .qr-notes {
-      font-size: 0.9rem;
-      letter-spacing: 0.05em;
+    .ticket__details {
       display: grid;
-      gap: 0.35rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px 16px;
+      margin-top: 18px;
     }
 
-    .qr-notes strong {
-      letter-spacing: 0.12em;
-      font-size: 1rem;
-    }
-
-    .ticket-side {
-      display: grid;
-      align-content: start;
-      justify-items: center;
-      text-transform: uppercase;
-      gap: 1.3rem;
-      position: relative;
-    }
-
-    .ticket-side::before {
-      content: '';
-      position: absolute;
-      inset: -24px 0;
-      border-radius: 0 0 60px 60px;
-      border-left: 2px dashed rgba(0,0,0,0.16);
-    }
-
-    .side-label {
-      font-size: 0.85rem;
-      letter-spacing: 0.4em;
-      color: var(--muted);
-    }
-
-    .side-value {
-      font-family: 'Barlow Condensed', 'Roboto', sans-serif;
-      font-size: 3.6rem;
-      font-weight: 600;
-      letter-spacing: 0.16em;
-    }
-
-    .ticket-footer {
-      margin-top: auto;
-      background: var(--stub);
-      border-radius: 10px;
-      padding: 0.9rem 1.1rem;
-      display: grid;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      letter-spacing: 0.08em;
-      line-height: 1.45;
-      font-family: 'Roboto Mono', 'Roboto', monospace;
-      color: rgba(0, 0, 0, 0.78);
-    }
-
-    .footer-compact {
+    .detail-block {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem 1.6rem;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .detail-block .detail-value {
+      font-family: 'VT323', monospace;
+      font-size: 1.55rem;
+      letter-spacing: 0.08em;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .ticket__footer {
+      margin-top: 32px;
+      padding: 14px 18px;
+      background: var(--stub);
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: 'VT323', monospace;
+      font-size: 1.12rem;
+      letter-spacing: 0.04em;
+    }
+
+    .footer__title {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .ticket__footer span {
+      display: block;
     }
 
     .actions {
       display: flex;
-      gap: 1rem;
       flex-wrap: wrap;
       justify-content: center;
+      gap: 12px;
     }
 
-    .share-url {
-      flex-basis: 100%;
-      text-align: center;
-      font-family: 'Roboto Mono', 'Roboto', monospace;
-      font-size: 0.8rem;
-      word-break: break-all;
-      color: #f9f9f9;
-    }
-
-    button {
+    .save-button {
       appearance: none;
       border: none;
+      background: var(--ink);
+      color: #fff;
+      padding: 0.75rem 1.6rem;
       border-radius: 999px;
-      padding: 0.85rem 1.8rem;
-      background: #f6f6f6;
-      color: #111;
-      font-family: 'Roboto', sans-serif;
-      font-size: 0.95rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
       cursor: pointer;
-      transition: transform 120ms ease, box-shadow 120ms ease;
-      box-shadow: 0 12px 20px rgba(0,0,0,0.2);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
     }
 
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 16px 24px rgba(0,0,0,0.26);
+    .save-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(0, 0, 0, 0.42);
     }
 
-    button:active {
-      transform: translateY(0);
-      box-shadow: 0 10px 18px rgba(0,0,0,0.18);
-    }
-
-    @media (max-width: 680px) {
-      .ticket {
-        width: 360px;
-        height: 780px;
-        padding: 38px 28px 30px;
-      }
-
-      .ticket-body {
-        grid-template-columns: 1fr 100px;
-      }
-
-      .ticket-headline {
-        font-size: 2.8rem;
-      }
-
-      .side-value {
-        font-size: 3rem;
-      }
-
-      .ticket-wrapper {
-        transform: rotate(-90deg) rotateX(7deg) scale(0.9);
-      }
+    .save-hint {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.95rem;
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.5;
     }
 
     @media (max-width: 480px) {
-      .ticket-wrapper {
-        transform: rotate(-90deg) rotateX(5deg) scale(0.82);
+      body {
+        padding: 24px 12px;
       }
 
-      button {
-        width: 100%;
+      .ticket {
+        width: min(94vw, 360px);
+        height: calc(min(94vw, 360px) * 2.45);
+      }
+
+      .ticket__inner {
+        grid-template-columns: 108px 1fr;
+      }
+
+      .ticket__qr img {
+        width: 108px;
+        height: 108px;
       }
     }
   </style>
 </head>
 <body>
-  <a class="ticket-image" href="IMG_3318.jpeg">
-    <img src="IMG_3318.jpeg" alt="Printed Regal ticket for Saturday Night with QR code">
-    <span class="ticket-overlay">
-      <span class="overlay-headline" data-field="headline" data-default="Saturday Night"></span>
-      <span class="overlay-subtitle" data-field="subtitle" data-default="Premiere"></span>
-      <span class="overlay-showtime" data-field="showtime" data-default="SAT • 7:30 PM"></span>
-      <span class="overlay-seat" data-field="seat" data-default="SEAT H12"></span>
-      <span class="overlay-admit" data-field="admit" data-default="ADMIT ONE"></span>
-      <span class="overlay-type" data-field="type" data-default="VIP"></span>
-      <span class="overlay-side" data-field="side" data-default="H12"></span>
-      <span class="overlay-footer" data-field="notes" data-default="Scan the QR code at entry • Non-transferable"></span>
-    </span>
-  </a>
+  <div class="wrapper">
+    <div class="ticket" id="ticket">
+      <div class="ticket__inner">
+        <aside class="ticket__spine">
+          <div class="spine-text">
+            <span class="spine__title" data-ticket-field="title">Saturday Night</span>
+            <span class="spine__showtime" data-ticket-field="datetime">7:15pm Sun 10/13/24</span>
+            <span class="spine__type" data-ticket-field="admit">Adult</span>
+          </div>
+        </aside>
+        <div class="ticket__content">
+          <div class="ticket__row">
+            <div class="ticket__qr">
+              <img id="qrImage" alt="Ticket QR code" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=Saturday%20Night">
+            </div>
+            <div class="ticket__theatre">
+              <span class="label" data-ticket-field="theatre-label">Theatre:</span>
+              <span class="value" data-ticket-field="theatre">4</span>
+              <span class="label" data-ticket-field="seat-label">Seat:</span>
+              <span class="value value--seat" data-ticket-field="seat">I-6</span>
+            </div>
+          </div>
+          <div class="ticket__details">
+            <div class="detail-block">
+              <span class="label">Movie</span>
+              <span class="detail-value" data-ticket-field="movie">Saturday Night</span>
+            </div>
+            <div class="detail-block">
+              <span class="label">Showtime</span>
+              <span class="detail-value" data-ticket-field="showtime">7:15pm Sun 10/13/24</span>
+            </div>
+            <div class="detail-block">
+              <span class="label">Admission</span>
+              <span class="detail-value" data-ticket-field="admission">Adult</span>
+            </div>
+            <div class="detail-block">
+              <span class="label">Location</span>
+              <span class="detail-value" data-ticket-field="location">Short Pump 14</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="ticket__footer">
+        <span class="footer__title" data-ticket-field="price">Adult $14.99 CRED</span>
+        <span data-ticket-field="transaction">Trans #: 443721</span>
+        <span data-ticket-field="timestamp">10/13/24 7:11pm</span>
+        <span data-ticket-field="order">07300CM10-Heather</span>
+      </footer>
+    </div>
+    <div class="actions">
+      <button class="save-button" id="saveButton" type="button">Save Ticket Photo</button>
+    </div>
+    <p class="save-hint">Tip: On iPhone tap "Save Ticket Photo" and, once the preview opens, press and hold the image to add it to your Photos.</p>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-Jv4jArtyTc95xJMu38xpv8uKUa95syEHCqB6f+GO6zkRgZNpmjDoE7YQDdyCjTiM" crossorigin="anonymous"></script>
   <script>
     (function () {
+      const defaults = {
+        'title': 'Saturday Night',
+        'datetime': '7:15pm Sun 10/13/24',
+        'admit': 'Adult',
+        'theatre-label': 'Theatre:',
+        'seat-label': 'Seat:',
+        'theatre': '4',
+        'seat': 'I-6',
+        'movie': 'Saturday Night',
+        'showtime': '7:15pm Sun 10/13/24',
+        'admission': 'Adult',
+        'location': 'Short Pump 14',
+        'price': 'Adult $14.99 CRED',
+        'transaction': 'Trans #: 443721',
+        'timestamp': '10/13/24 7:11pm',
+        'order': '07300CM10-Heather',
+        'qr': 'Saturday Night'
+      };
+
       const params = new URLSearchParams(window.location.search);
-      const overlay = document.querySelectorAll('[data-field]');
-      overlay.forEach((node) => {
-        const key = node.dataset.field;
-        const rawValue = params.get(key);
-        const value = rawValue ? rawValue : node.dataset.default || '';
-        node.textContent = value;
+      const data = { ...defaults };
+
+      params.forEach((value, key) => {
+        const normalized = key.trim().toLowerCase();
+        if (normalized in data) {
+          data[normalized] = value;
+        }
       });
 
-      const ticketLink = document.querySelector('.ticket-image');
-      if (!ticketLink) {
-        return;
+      document.querySelectorAll('[data-ticket-field]').forEach((node) => {
+        const field = node.getAttribute('data-ticket-field');
+        if (field && field in data) {
+          node.textContent = data[field];
+        }
+      });
+
+      const qrImage = document.getElementById('qrImage');
+      if (qrImage) {
+        const qrValue = encodeURIComponent(data.qr || defaults.qr);
+        qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${qrValue}`;
       }
 
-      const ticketImage = ticketLink.querySelector('img');
-      const ticketOverlay = ticketLink.querySelector('.ticket-overlay');
+      const saveButton = document.getElementById('saveButton');
+      const ticketNode = document.getElementById('ticket');
 
-      if (!ticketImage || !ticketOverlay || ticketImage.dataset.composited === 'true') {
-        return;
-      }
-
-      const imageReady = ticketImage.complete
-        ? Promise.resolve()
-        : new Promise((resolve) => ticketImage.addEventListener('load', resolve, { once: true }));
-      const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
-
-      Promise.all([imageReady, fontsReady]).then(() => {
-        if (!ticketImage.naturalWidth || !ticketImage.naturalHeight || ticketImage.dataset.composited === 'true') {
+      async function saveTicket() {
+        if (!ticketNode) {
           return;
         }
 
-        const orientation = detectOrientation(ticketImage);
-        applyOverlayRotation(ticketOverlay, orientation);
+        saveButton.disabled = true;
+        saveButton.textContent = 'Rendering…';
 
-        requestAnimationFrame(() => {
-          mergeOverlay(ticketLink, ticketImage, ticketOverlay).catch((error) => {
-            console.error('Unable to merge ticket overlay', error);
+        const scale = window.devicePixelRatio > 1 ? window.devicePixelRatio : 2;
+        let renderedCanvas = null;
+
+        try {
+          renderedCanvas = await html2canvas(ticketNode, {
+            backgroundColor: '#f8f3eb',
+            scale,
+            useCORS: true,
+            imageTimeout: 0,
+            onclone: (doc) => {
+              const clonedTicket = doc.getElementById('ticket');
+              if (clonedTicket) {
+                clonedTicket.style.boxShadow = 'none';
+              }
+            }
           });
-        });
-      });
 
-      function applyOverlayRotation(overlayNode, orientation) {
-        if (!overlayNode) {
-          return;
-        }
+          const dataUrl = renderedCanvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.href = dataUrl;
+          link.download = 'movie-ticket.png';
 
-        if (orientation === 'landscape-clockwise') {
-          overlayNode.style.transform = 'rotate(90deg)';
-        } else if (orientation === 'landscape-counterclockwise') {
-          overlayNode.style.transform = 'rotate(-90deg)';
-        } else {
-          overlayNode.style.transform = 'none';
-        }
-      }
-
-      function detectOrientation(imageNode) {
-        if (imageNode.naturalWidth <= imageNode.naturalHeight) {
-          return 'portrait';
-        }
-
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = imageNode.naturalWidth;
-        tempCanvas.height = imageNode.naturalHeight;
-        const ctx = tempCanvas.getContext('2d');
-
-        if (!ctx) {
-          return 'landscape-clockwise';
-        }
-
-        ctx.drawImage(imageNode, 0, 0);
-
-        const measureEdge = (x, y, width, height) => {
-          const data = ctx.getImageData(x, y, width, height).data;
-          let score = 0;
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            score += Math.max(0, r - (g + b) / 2);
+          if (typeof link.download === 'string') {
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            window.open(dataUrl, '_blank');
           }
-          return score / Math.max(1, (width * height));
-        };
-
-        const edgeHeight = Math.max(1, Math.round(tempCanvas.height * 0.12));
-        const topScore = measureEdge(0, 0, tempCanvas.width, edgeHeight);
-        const bottomScore = measureEdge(0, tempCanvas.height - edgeHeight, tempCanvas.width, edgeHeight);
-
-        if (bottomScore > topScore) {
-          return 'landscape-clockwise';
+        } catch (error) {
+          console.error('Unable to generate ticket image', error);
+          if (renderedCanvas) {
+            window.open(renderedCanvas.toDataURL('image/png'), '_blank');
+          }
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = 'Save Ticket Photo';
         }
-
-        if (topScore > bottomScore) {
-          return 'landscape-counterclockwise';
-        }
-
-        const edgeWidth = Math.max(1, Math.round(tempCanvas.width * 0.12));
-        const rightScore = measureEdge(tempCanvas.width - edgeWidth, 0, edgeWidth, tempCanvas.height);
-        const leftScore = measureEdge(0, 0, edgeWidth, tempCanvas.height);
-
-        return rightScore >= leftScore ? 'landscape-clockwise' : 'landscape-counterclockwise';
       }
 
-      function mergeOverlay(linkNode, imageNode, overlayNode) {
-        return new Promise((resolve, reject) => {
-          const rect = imageNode.getBoundingClientRect();
-          const displayWidth = Math.round(rect.width);
-          const displayHeight = Math.round(rect.height);
-
-          if (!displayWidth || !displayHeight) {
-            resolve();
-            return;
-          }
-
-          const ratio = window.devicePixelRatio || 1;
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.round(displayWidth * ratio);
-          canvas.height = Math.round(displayHeight * ratio);
-          const ctx = canvas.getContext('2d');
-
-          if (!ctx) {
-            resolve();
-            return;
-          }
-
-          ctx.scale(ratio, ratio);
-          ctx.drawImage(imageNode, 0, 0, displayWidth, displayHeight);
-
-          const overlayDataUrl = buildOverlayDataUrl(overlayNode, displayWidth, displayHeight);
-          loadImage(overlayDataUrl)
-            .then((overlayImage) => {
-              ctx.drawImage(overlayImage, 0, 0, displayWidth, displayHeight);
-              const mergedUrl = canvas.toDataURL('image/png');
-              imageNode.dataset.composited = 'true';
-              imageNode.src = mergedUrl;
-              linkNode.href = mergedUrl;
-              linkNode.setAttribute('download', 'ticket.png');
-              overlayNode.style.display = 'none';
-              resolve();
-            })
-            .catch(reject);
-        });
-      }
-
-      function buildOverlayDataUrl(overlayNode, width, height) {
-        const wrapper = document.createElement('div');
-        wrapper.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-        wrapper.style.position = 'relative';
-        wrapper.style.width = `${width}px`;
-        wrapper.style.height = `${height}px`;
-
-        const clone = overlayNode.cloneNode(true);
-        clone.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
-        wrapper.appendChild(clone);
-        applyInlineStyles(overlayNode, clone);
-
-        const serializer = new XMLSerializer();
-        const html = serializer.serializeToString(wrapper);
-        const styleBlock = "<style>@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=Roboto:wght@300;400;500;700&display=swap');</style>";
-        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${styleBlock}<foreignObject width="100%" height="100%">${html}</foreignObject></svg>`;
-        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-      }
-
-      function applyInlineStyles(sourceNode, targetNode) {
-        const sourceElements = [sourceNode, ...sourceNode.querySelectorAll('*')];
-        const targetElements = [targetNode, ...targetNode.querySelectorAll('*')];
-
-        sourceElements.forEach((element, index) => {
-          const computed = window.getComputedStyle(element);
-          let cssText = '';
-          for (let i = 0; i < computed.length; i++) {
-            const property = computed[i];
-            const value = computed.getPropertyValue(property);
-            cssText += `${property}:${value};`;
-          }
-          targetElements[index].setAttribute('style', cssText);
-        });
-      }
-
-      function loadImage(src) {
-        return new Promise((resolve, reject) => {
-          const imgNode = new Image();
-          imgNode.onload = () => resolve(imgNode);
-          imgNode.onerror = reject;
-          imgNode.src = src;
-        });
-      }
+      saveButton.addEventListener('click', saveTicket);
     })();
   </script>
 </body>
